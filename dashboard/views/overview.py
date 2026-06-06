@@ -1,6 +1,7 @@
 """Overview page – KPIs + resumen del proyecto"""
 import streamlit as st
 import pandas as pd
+from dashboard.components.translations import t
 
 @st.cache_data
 def load_metrics():
@@ -20,10 +21,10 @@ def load_edges():
 
 def render():
     # Hero
-    st.markdown("""
+    st.markdown(f"""
     <div class="hero">
-        <h1>🚌 Urban Mobility Analytics</h1>
-        <p>Análisis de demanda de movilidad urbana · Argentina 2025 · SUBE + GTFS Buenos Aires</p>
+        <h1>{t('ov_title')}</h1>
+        <p>{t('ov_subtitle')}</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -41,27 +42,27 @@ def render():
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown(f"""<div class="metric-card">
-            <div class="label">Transacciones 2025</div>
+            <div class="label">{t('kpi_transactions')}</div>
             <div class="value">{total_trips:,.0f}</div>
-            <div class="delta">total del año</div>
+            <div class="delta">{t('kpi_transactions_sub')}</div>
         </div>""", unsafe_allow_html=True)
     with c2:
         st.markdown(f"""<div class="metric-card">
-            <div class="label">Promedio diario</div>
+            <div class="label">{t('kpi_avg_daily')}</div>
             <div class="value">{avg_daily:,.0f}</div>
-            <div class="delta">viajes/día</div>
+            <div class="delta">{t('kpi_avg_daily_sub')}</div>
         </div>""", unsafe_allow_html=True)
     with c3:
         st.markdown(f"""<div class="metric-card">
-            <div class="label">Pico máximo</div>
+            <div class="label">{t('kpi_peak_daily')}</div>
             <div class="value">{max_daily:,.0f}</div>
-            <div class="delta">viajes en un día</div>
+            <div class="delta">{t('kpi_peak_daily_sub')}</div>
         </div>""", unsafe_allow_html=True)
     with c4:
         st.markdown(f"""<div class="metric-card">
-            <div class="label">Viajes / tarjeta</div>
+            <div class="label">{t('kpi_ratio')}</div>
             <div class="value">{avg_ratio:.2f}</div>
-            <div class="delta">promedio diario</div>
+            <div class="delta">{t('kpi_ratio_sub')}</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -70,7 +71,7 @@ def render():
     col_left, col_right = st.columns([2, 1])
 
     with col_left:
-        st.markdown("#### Evolución diaria de transacciones SUBE")
+        st.markdown(f"#### {t('chart_ov_title')}")
         import plotly.express as px
         fig = px.area(
             metrics_df, x="DIA_TRANSPORTE", y="total_transacciones",
@@ -79,7 +80,7 @@ def render():
         )
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(15,23,42,0.8)",
-            xaxis_title="", yaxis_title="Transacciones",
+            xaxis_title="", yaxis_title=t('chart_ov_y'),
             hovermode="x unified", margin=dict(l=0, r=0, t=10, b=0),
             height=300,
         )
@@ -87,19 +88,19 @@ def render():
         st.plotly_chart(fig, use_container_width=True)
 
     with col_right:
-        st.markdown("#### Red de transporte")
+        st.markdown(f"#### {t('ov_network_info')}")
         st.markdown(f"""
-        | Indicador | Valor |
+        | {t('ov_indicator')} | {t('ov_value')} |
         |---|---|
-        | Paradas | **{len(stops_df):,}** |
-        | Líneas | **{len(routes_df):,}** |
-        | Aristas grafo | **{len(edges_df):,}** |
+        | {t('ov_stops')} | **{len(stops_df):,}** |
+        | {t('ov_lines')} | **{len(routes_df):,}** |
+        | {t('ov_edges')} | **{len(edges_df):,}** |
         """)
-        st.info("Explorá la red en la página **Red GTFS**")
+        st.info(t('ov_link_msg'))
 
     # Footer note
     st.markdown("---")
     st.markdown(
-        "<small>Fuentes: datos.transporte.gob.ar · data.buenosaires.gob.ar · GTFS Colectivos CABA</small>",
+        f"<small>{t('ov_sources')}</small>",
         unsafe_allow_html=True
     )

@@ -1,0 +1,19 @@
+paths:
+  raw_sube_transactions: "data/raw/cantidad_transacciones_fecha-2025.csv"
+  raw_sube_cards: "data/raw/cantidad_tarjeta_fecha-2025.csv"
+  raw_gtfs_dir: "data/raw/gtfs"
+  processed_dir: "data/processed"
+  comunas_shapefile: "comunas/comunas.shp"
+  barrios_shapefile: "barrios/barrios.shp"
+
+gtfs:
+  chunk_size: 100000
+  stops_output: "data/processed/stops.parquet"
+  routes_output: "data/processed/routes.parquet"
+  edges_output: "data/processed/edges.parquet"
+  trips_stop_times_output: "data/processed/trips_stop_times.parquet"
+
+sube:
+  clean_transactions_output: "data/processed/sube_transactions.parquet"
+  clean_cards_output: "data/processed/sube_cards.parquet"
+  mobility_metrics_output: "data/processed/mobility_metrics.parquet"

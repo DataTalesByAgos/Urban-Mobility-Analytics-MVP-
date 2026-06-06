@@ -4,6 +4,10 @@
 This project is an urban mobility analytics prototype based on open data from Argentina's public transport system. Its goal is to analyze aggregate mobility patterns using demand signals from the SUBE system and the public transit network structure (GTFS), incorporating geographic context.
 The system is designed as a reproducible foundation for public mobility policy analysis and as a starting point for future extensions toward origin-destination (OD) models.
 
+## Architecture
+
+![Project Architecture](docs/architecture.png)
+
 ## Repository Structure
 ```text
 urban-mobility-mvp/

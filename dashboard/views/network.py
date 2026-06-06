@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from dashboard.components.translations import t
 
 @st.cache_data
 def load_stops():
@@ -16,8 +17,8 @@ def load_edges():
     return pd.read_parquet("data/processed/edges.parquet")
 
 def render():
-    st.markdown("## 🚌 Red de Transporte Público (GTFS)")
-    st.markdown("Estructura de la red de colectivos de Buenos Aires basada en datos GTFS.")
+    st.markdown(f"## {t('net_title')}")
+    st.markdown(t('net_subtitle'))
 
     stops_df  = load_stops()
     routes_df = load_routes()
@@ -26,19 +27,19 @@ def render():
     # ── KPIs ──────────────────────────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.metric("Paradas totales", f"{len(stops_df):,}")
+        st.metric(t('net_kpi_stops'), f"{len(stops_df):,}")
     with c2:
-        st.metric("Líneas activas", f"{len(routes_df):,}")
+        st.metric(t('net_kpi_lines'), f"{len(routes_df):,}")
     with c3:
-        st.metric("Aristas de red", f"{len(edges_df):,}")
+        st.metric(t('net_kpi_edges'), f"{len(edges_df):,}")
     with c4:
         top_freq = edges_df["trip_frequency"].max()
-        st.metric("Frecuencia máx.", f"{top_freq:,} viajes")
+        st.metric(t('net_kpi_max_freq'), f"{top_freq:,} {t('net_kpi_max_freq_sub')}")
 
     st.markdown("---")
 
     # ── Mapa de paradas ───────────────────────────────────────────────
-    st.markdown("#### Distribución geográfica de paradas")
+    st.markdown(f"#### {t('net_chart_map_title')}")
     map_stops = stops_df.dropna(subset=["stop_lat", "stop_lon"]).copy()
 
     # Merge edges frequency per stop
@@ -72,12 +73,12 @@ def render():
     fig_map.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=0, r=0, t=0, b=0),
-        coloraxis_colorbar=dict(title="Frecuencia"),
+        coloraxis_colorbar=dict(title=t('net_chart_map_legend')),
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
     # ── Top rutas por frecuencia ──────────────────────────────────────
-    st.markdown("#### Top 20 rutas por frecuencia de viajes")
+    st.markdown(f"#### {t('net_chart_top_routes')}")
     top_routes = (
         edges_df.groupby("route_id")["trip_frequency"]
         .sum()
@@ -93,7 +94,7 @@ def render():
         color="trip_frequency",
         color_continuous_scale="Blues",
         template="plotly_dark",
-        labels={"trip_frequency": "Frecuencia total", "route_short_name": "Línea"},
+        labels={"trip_frequency": t('net_col_trip_frequency'), "route_short_name": t('net_col_route_short_name')},
     )
     fig_bar.update_layout(
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(15,23,42,.8)",
@@ -103,11 +104,44 @@ def render():
     st.plotly_chart(fig_bar, use_container_width=True)
 
     # ── Tabla explorable ──────────────────────────────────────────────
-    with st.expander("Explorar tabla de rutas"):
+    with st.expander(t('net_table_expand')):
+        # Map route type numeric codes to user friendly terms
+        route_type_map = {
+            0: {"es": "Tranvía", "en": "Tram"},
+            1: {"es": "Subte", "en": "Subway"},
+            2: {"es": "Tren", "en": "Train"},
+            3: {"es": "Colectivo (Colectivo/Bus)", "en": "Bus"}
+        }
+        lang = st.session_state.get("lang", "es")
+        
+        # Prepare routes dataframe
+        explored_df = routes_df.copy()
+        
+        # Convert route type to friendly string
+        explored_df['route_type'] = explored_df['route_type'].map(
+            lambda x: route_type_map.get(int(x), {}).get(lang, f"Tipo {x}") if pd.notna(x) else ""
+        )
+        
+        # Merge frequencies
+        freq_df = edges_df.groupby("route_id")["trip_frequency"].sum().reset_index()
+        table_df = pd.merge(explored_df, freq_df, on="route_id", how="left")
+        table_df["trip_frequency"] = table_df["trip_frequency"].fillna(0).astype(int)
+        
+        # Rename columns to user friendly names
+        col_renames = {
+            "route_id": t('net_col_route_id'),
+            "route_short_name": t('net_col_route_short_name'),
+            "route_long_name": t('net_col_route_long_name'),
+            "route_type": t('net_col_route_type'),
+            "trip_frequency": t('net_col_trip_frequency')
+        }
+        
+        table_df = table_df[list(col_renames.keys())].rename(columns=col_renames)
+        table_df = table_df.sort_values(t('net_col_trip_frequency'), ascending=False)
+        
         st.dataframe(
-            routes_df.merge(
-                edges_df.groupby("route_id")["trip_frequency"].sum().reset_index(),
-                on="route_id", how="left"
-            ).sort_values("trip_frequency", ascending=False),
-            use_container_width=True, height=300
+            table_df,
+            use_container_width=True,
+            height=300,
+            hide_index=True
         )
